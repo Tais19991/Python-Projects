@@ -59,7 +59,7 @@ class MorseCodeDecrypt:
         self.list_for_decryption = self.code_for_decryption.strip().split()
 
     def __repr__(self) -> str:
-        return f'TranslateToMorseCode({self.dict_for_decryption}, {self.code_for_decryption})'
+        return f'TranslateToEnglishText({self.dict_for_decryption}, {self.code_for_decryption})'
 
     def run(self) -> str:
         """Take list of Morse code 'letters' and return translated English text as a str"""
