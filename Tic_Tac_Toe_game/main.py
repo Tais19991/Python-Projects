@@ -54,6 +54,7 @@ def win_checker(board) -> bool:
 
 
 def select_player():
+    """Defines x and o players"""
     player = input('\nSelect player (x or o):\n').lower()
     if player in ['x', 'o']:
         opponent = 'o' if player == 'x' else 'x'
@@ -64,6 +65,7 @@ def select_player():
 
 
 def main():
+    """Main program flow"""
     end_game = False
     chosen_option = int(input("\nChoose option:\n" \
                               "1 - hot seat (play with nearby human)\n" \

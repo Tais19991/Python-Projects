@@ -1,4 +1,4 @@
-class AutoPlayer():
+class AutoPlayer:
     """Class for predicting the best opponent's move in a game of tic-tac-toe"""
 
     def __init__(self, board: list, player: str, opponent: str) -> None:
