@@ -1,34 +1,28 @@
-from auto_player import AutoPlayer
-
-board = [["_", "_", "_"],
-         ["_", "_", "_"],
-         ["_", "_", "_"]]
+from auto_player import AutoPlayer, AiPlayer
 
 
 def show_board(current_board) -> None:
     """Shows pretty board"""
     print('\n' + '\n'.join(['\t'.join([str(cell) for cell in row]) for row in current_board]))
-    print('\n' + '*'*32 + '\n')
+    print('\n' + '*' * 32 + '\n')
 
 
 def update_board(board, row_num: int, col_num: int, player: str) -> list:
     """Updates board after player move"""
-    if is_valid_move(board, row_num, col_num):
-        board[row_num - 1][col_num - 1] = player
+    board[row_num][col_num] = player
     return board
 
 
-def is_valid_move(board, row_num: int, col_num: int) -> bool:
+def is_valid_move(board, row_num: int, col_num: int):
     """Checks whether the player has chosen the correct move"""
-
-    if 1 <= row_num <= 3 and 1 <= col_num <= 3:
-        if board[row_num - 1][col_num - 1] == '_':
+    if 0 <= row_num <= 2 and 0 <= col_num <= 2:
+        if board[row_num][col_num] == '_':
             return True
         else:
             print('The place has been taken already. Choose another place to move')
             return False
     else:
-        print('Incorrect numbers. Choose number of row (1-3) and number of column (1-3)')
+        print("Chosen number is out of range")
         return False
 
 
@@ -72,9 +66,14 @@ def select_player():
 
 def user_move() -> tuple:
     """Ask user about x,o position and return number of row and col on board"""
-    col = int(input('\nChoose number of column (1-3):\n'))
-    row = int(input('Choose number of row (1-3):\n'))
-    return row, col
+    try:
+        col = int(input('\nChoose number of column (0-2):\n'))
+        row = int(input('Choose number of row (0-2):\n'))
+    except ValueError:
+        print('Incorrect symbol. Choose number of row (0, 1, 2) and number of column (0, 1, 2)')
+        return user_move()
+    else:
+        return row, col
 
 
 def switch_user(users: tuple, current_player_flag: bool):
@@ -84,11 +83,13 @@ def switch_user(users: tuple, current_player_flag: bool):
 
 def main():
     """Main program flow"""
+
+    board = [["_", "_", "_"],
+             ["_", "_", "_"],
+             ["_", "_", "_"]]
     end_game = False
     chosen_option = int(input("\nChoose option:\n1 - Hot Seat (play with nearby human)\n2 - play with computer\n"))
-
     player, opponent = select_player()
-
     current_player_flag = False
     current_player = player
     row, col = 0, 0
@@ -100,19 +101,24 @@ def main():
         # your move
         print(f'Player {current_player} move:')
 
-        # game with human
-        if chosen_option == 1:
-            row, col = user_move()
-
-        # game with autoplay
-        elif chosen_option == 2:
-            if current_player == player:
+        valid_move = False
+        while not valid_move:
+            # game with human
+            if chosen_option == 1:
                 row, col = user_move()
-            else:
-                comp = AutoPlayer(board, opponent)
-                row, col = comp.find_best_move()
 
-        # check validity of move and update board
+            # game with autoplay
+            elif chosen_option == 2:
+                if current_player == player:
+                    row, col = user_move()
+                else:
+                    comp = AiPlayer(board, opponent)
+                    row, col = comp.find_next_move()
+
+            # check validity of move
+            valid_move = is_valid_move(board, row, col)
+
+        # update board
         update_board(board, row, col, current_player)
 
         # check win, draw and end of game
