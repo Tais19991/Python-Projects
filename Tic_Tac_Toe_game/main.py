@@ -1,139 +1,65 @@
-from auto_player import AutoPlayer, AiPlayer
+from player import Player
+from board import Board
 
 
-def show_board(current_board) -> None:
-    """Shows pretty board"""
-    print('\n' + '\n'.join(['\t'.join([str(cell) for cell in row]) for row in current_board]))
-    print('\n' + '*' * 32 + '\n')
+class Game:
+    def __init__(self):
+        self.board = Board()
+        self.end_game = False
+        self.player = None
+        self.opponent = None
+        self.current_player = None
 
+    def select_players(self):
+        """Allow player 1 select symbol and auto-select player 2"""
+        player1_symbol = input('\nSelect player (x or o): ').lower()
+        while player1_symbol not in ['x', 'o']:
+            print('\nWrong letter has been chosen')
+            return self.select_players()
+        self.player = Player(player1_symbol, self.board)
+        # auto-selection player 2
+        player2_symbol = 'o' if player1_symbol == 'x' else 'x'
+        self.opponent = Player(player2_symbol, self.board)
 
-def update_board(board, row_num: int, col_num: int, player: str) -> list:
-    """Updates board after player move"""
-    board[row_num][col_num] = player
-    return board
+    def switch_player(self):
+        """Switch players between sessions"""
+        self.current_player = self.opponent if self.current_player == self.player else self.player
 
+    def choose_option(self):
+        while True:
+            try:
+                option = int(input("\nChoose option:\n1 - Hot Seat (play with nearby human)\n2 - play with computer\n"))
+                if option in [1, 2]:
+                    return option
+                print("\nWrong number has been chosen. Try again")
+            except ValueError:
+                print("\nInvalid input. Please enter 1 or 2.")
 
-def is_valid_move(board, row_num: int, col_num: int):
-    """Checks whether the player has chosen the correct move"""
-    if 0 <= row_num <= 2 and 0 <= col_num <= 2:
-        if board[row_num][col_num] == '_':
-            return True
-        else:
-            print('The place has been taken already. Choose another place to move')
-            return False
-    else:
-        print("Chosen number is out of range")
-        return False
+    def main(self):
+        """Main program flow"""
+        option = self.choose_option()
+        self.select_players()
+        self.current_player = self.opponent
 
+        while not self.end_game:
+            self.switch_player()
+            print(f'\nPlayer {self.current_player.player} move:')
 
-def win_checker(board) -> bool:
-    """Checks rows for a win combination"""
-    for row in board:
-        if row == ["x", "x", "x"] or row == ["o", "o", "o"]:
-            return True
+            if option == 1 or self.current_player == self.player:
+                self.current_player.ask_player_move()
+            else:
+                self.current_player.auto_find_next_move(opponent=self.player)
 
-    # Check columns for a win
-    for col in range(3):
-        if board[0][col] == board[1][col] == board[2][col] and board[0][col] in ["x", "o"]:
-            return True
+            self.current_player.make_move()
+            board_status = self.board.check_board()
 
-    # Check diagonals for a win
-    if board[0][0] == board[1][1] == board[2][2] and board[0][0] in ["x", "o"]:
-        return True
-    if board[0][2] == board[1][1] == board[2][0] and board[0][2] in ["x", "o"]:
-        return True
-
-
-def is_moves_left(board) -> bool:
-    """Takes the board and check if moves remaining on the board"""
-    for i in range(3):
-        for j in range(3):
-            if board[i][j] == '_':
-                return True
-    return False
-
-
-def select_player():
-    """Defines players x and o"""
-    player = input('\nSelect player (x or o):\n').lower()
-    if player in ['x', 'o']:
-        opponent = 'o' if player == 'x' else 'x'
-        return player, opponent
-    else:
-        print('\nWrong letter has been chosen\n')
-        return select_player()
-
-
-def user_move() -> tuple:
-    """Ask user about x,o position and return number of row and col on board"""
-    try:
-        col = int(input('\nChoose number of column (0-2):\n'))
-        row = int(input('Choose number of row (0-2):\n'))
-    except ValueError:
-        print('Incorrect symbol. Choose number of row (0, 1, 2) and number of column (0, 1, 2)')
-        return user_move()
-    else:
-        return row, col
-
-
-def switch_user(users: tuple, current_player_flag: bool):
-    """Switch users between sessions"""
-    return users[0] if current_player_flag else users[1], not current_player_flag
-
-
-def main():
-    """Main program flow"""
-
-    board = [["_", "_", "_"],
-             ["_", "_", "_"],
-             ["_", "_", "_"]]
-    end_game = False
-    chosen_option = int(input("\nChoose option:\n1 - Hot Seat (play with nearby human)\n2 - play with computer\n"))
-    player, opponent = select_player()
-    current_player_flag = False
-    current_player = player
-    row, col = 0, 0
-
-    while not end_game:
-
-        # state of board
-        show_board(board)
-        # your move
-        print(f'Player {current_player} move:')
-
-        valid_move = False
-        while not valid_move:
-            # game with human
-            if chosen_option == 1:
-                row, col = user_move()
-
-            # game with autoplay
-            elif chosen_option == 2:
-                if current_player == player:
-                    row, col = user_move()
-                else:
-                    comp = AiPlayer(board, opponent)
-                    row, col = comp.find_next_move()
-
-            # check validity of move
-            valid_move = is_valid_move(board, row, col)
-
-        # update board
-        update_board(board, row, col, current_player)
-
-        # check win, draw and end of game
-        if win_checker(board):
-            show_board(board)
-            print(f'\nCongrats, player {current_player} win!')
-            end_game = True
-        elif not is_moves_left(board):
-            show_board(board)
-            print("It's draw!")
-            end_game = True
-        else:
-            # change player
-            current_player, current_player_flag = switch_user((player, opponent), current_player_flag)
+            if board_status == 'win':
+                print(f'\nCongrats, player {self.current_player.player} wins!')
+                self.end_game = True
+            elif board_status == 'draw':
+                print("It's a draw!")
+                self.end_game = True
 
 
 if __name__ == '__main__':
-    main()
+    Game().main()
