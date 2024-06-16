@@ -1,81 +1,65 @@
-from auto_player import AutoPlayer
-
-board = [["_", "_", "_"],
-         ["_", "_", "_"],
-         ["_", "_", "_"]]
+from player import Player
+from board import Board
 
 
-def show_board(current_board) -> None:
-    """Shows pretty board"""
-    print('\n'.join(['\t'.join([str(cell) for cell in row]) for row in current_board]) + '\n')
+class Game:
+    def __init__(self):
+        self.board = Board()
+        self.end_game = False
+        self.player = None
+        self.opponent = None
+        self.current_player = None
 
+    def select_players(self):
+        """Allow player 1 select symbol and auto-select player 2"""
+        player1_symbol = input('\nSelect player (x or o): ').lower()
+        while player1_symbol not in ['x', 'o']:
+            print('\nWrong letter has been chosen')
+            return self.select_players()
+        self.player = Player(player1_symbol, self.board)
+        # auto-selection player 2
+        player2_symbol = 'o' if player1_symbol == 'x' else 'x'
+        self.opponent = Player(player2_symbol, self.board)
 
-def update_board(board, row_num: int, col_num: int, player: str) -> list:
-    """Updates board after player move"""
-    if is_valid_move(board, row_num, col_num):
-        board[row_num - 1][col_num - 1] = player
-    return board
+    def switch_player(self):
+        """Switch players between sessions"""
+        self.current_player = self.opponent if self.current_player == self.player else self.player
 
+    def choose_option(self):
+        while True:
+            try:
+                option = int(input("\nChoose option:\n1 - Hot Seat (play with nearby human)\n2 - play with computer\n"))
+                if option in [1, 2]:
+                    return option
+                print("\nWrong number has been chosen. Try again")
+            except ValueError:
+                print("\nInvalid input. Please enter 1 or 2.")
 
-def is_valid_move(board, row_num: int, col_num: int) -> bool:
-    """Checks whether the player has chosen the correct move"""
-    if 1 <= row_num <= 3 and 1 <= col_num <= 3:
-        if board[row_num - 1][col_num - 1] == '_':
-            return True
-        else:
-            print('The place has been taken already. Choose another place to move')
-            return False
-    else:
-        print('Incorrect numbers. Choose number of row (1-3) and number of column (1-3)')
-        return False
+    def main(self):
+        """Main program flow"""
+        option = self.choose_option()
+        self.select_players()
+        self.current_player = self.opponent
 
+        while not self.end_game:
+            self.switch_player()
+            print(f'\nPlayer {self.current_player.player} move:')
 
-def win_checker(board) -> bool:
-    """Checks rows for a win combination"""
-    for row in board:
-        if row == ["x", "x", "x"] or row == ["o", "o", "o"]:
-            return True
+            if option == 1 or self.current_player == self.player:
+                self.current_player.ask_player_move()
+            else:
+                self.current_player.auto_find_next_move(opponent=self.player)
 
-    # Check columns for a win
-    for col in range(3):
-        if board[0][col] == board[1][col] == board[2][col] and board[0][col] in ["x", "o"]:
-            return True
+            self.current_player.make_move()
+            board_status = self.board.check_board()
 
-    # Check diagonals for a win
-    if board[0][0] == board[1][1] == board[2][2] and board[0][0] in ["x", "o"]:
-        return True
-    if board[0][2] == board[1][1] == board[2][0] and board[0][2] in ["x", "o"]:
-        return True
-
-    # Check a draw
-    if "_" not in board:
-        print("Draw")
-        return True
-
-
-def select_player():
-    player = input('\nSelect player (x or o):\n').lower()
-    if player in ['x', 'o']:
-        opponent = 'o' if player == 'x' else 'x'
-        return player, opponent
-    else:
-        print('\nWrong letter has been chosen\n')
-        return select_player()
-
-
-def main():
-    end_game = False
-    chosen_option = int(input("\nChoose option:\n" \
-                              "1 - hot seat (play with nearby human)\n" \
-                              "2 - play with computer\n"))
-    player, opponent = select_player()
-
-    while not end_game:
-        if chosen_option == 1:
-            pass
-        elif chosen_option == 2:
-            pass
+            if board_status == 'win':
+                print(f'\nCongrats, player {self.current_player.player} wins!')
+                self.end_game = True
+            elif board_status == 'draw':
+                print("It's a draw!")
+                self.end_game = True
 
 
 if __name__ == '__main__':
-    main()
+    Game().main()

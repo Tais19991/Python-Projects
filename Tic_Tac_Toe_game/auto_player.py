@@ -1,3 +1,94 @@
+
+
+
+
+class AiPlayer (Board):
+    """Class for predicting the best opponent's move in a game of tic-tac-toe"""
+
+    def __init__(self, board: list, opponent: str) -> None:
+        self.board = board
+        self.opponent = opponent
+
+    def __repr__(self) -> str:
+        return f'AI_player(board: {self.board}, ' \
+               f'mark: {self.opponent})'
+
+    def find_next_move(self) -> tuple:
+        """Takes the state of the board, players(x, o) and determines the presence/absence of a winning combination"""
+        b = self.board
+        row_move = 0
+        col_move = 0
+        move = False
+
+        while not move:
+
+            # Checking for Rows
+            for row in range(3):
+                if b[row][0] == b[row][1] != self.opponent:
+                    if b[row][2] == '_':
+                        row_move = row
+                        col_move = 2
+                        move = True
+
+                elif b[row][1] == b[row][2] != self.opponent:
+                    if b[row][0] == '_':
+                        row_move = row
+                        col_move = 0
+                        move = True
+
+            # Checking for Columns
+            for col in range(3):
+                if b[0][col] == b[1][col] != self.opponent:
+                    if b[2][col] == '_':
+                        row_move = 2
+                        col_move = col
+                        move = True
+
+                elif b[1][col] == b[2][col] != self.opponent:
+                    if b[0][col] == '_':
+                        row_move = 0
+                        col_move = col
+                        move = True
+
+            # Checking for Diagonals for X or O victory.
+            if b[0][0] == b[1][1] != self.opponent:
+                if b[2][2] == '_':
+                    row_move = 2
+                    col_move = 2
+                    move = True
+
+            elif b[1][1] == b[2][2] != self.opponent:
+                if b[0][0] == '_':
+                    row_move = 0
+                    col_move = 0
+                    move = True
+
+            elif b[0][2] == b[1][1] != self.opponent:
+                if b[2][0] == '_':
+                    row_move = 2
+                    col_move = 0
+                    move = True
+
+            elif b[1][1] == b[2][0] != self.opponent:
+                if b[0][2] == '_':
+                    row_move = 0
+                    col_move = 2
+                    move = True
+
+            else:
+                for i in range(3):
+                    for j in range(3):
+                        if b[i][j] == '_':
+                            row_move = i
+                            col_move = j
+                            move = True
+
+        return row_move, col_move
+
+
+
+
+
 class AutoPlayer():
     """Class for predicting the best opponent's move in a game of tic-tac-toe"""
 
